@@ -34,13 +34,68 @@ class Compression {
             int originalHeight,
             int maxWidth,
             int maxHeight,
-            int quality
+            int quality,
     ) throws IOException {
         Pair<Integer, Integer> targetDimensions =
                 this.calculateTargetDimensions(originalWidth, originalHeight, maxWidth, maxHeight);
 
         int targetWidth = targetDimensions.first;
         int targetHeight = targetDimensions.second;
+
+        Bitmap bitmap = null;
+        if (originalWidth <= maxWidth && originalHeight <= maxHeight) {
+            bitmap = BitmapFactory.decodeFile(originalImagePath);
+        } else {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = calculateInSampleSize(originalWidth, originalHeight, targetWidth, targetHeight);
+            bitmap = BitmapFactory.decodeFile(originalImagePath, options);
+        }
+
+        // Use original image exif orientation data to preserve image orientation for the resized bitmap
+        ExifInterface originalExif = new ExifInterface(originalImagePath);
+        String originalOrientation = originalExif.getAttribute(ExifInterface.TAG_ORIENTATION);
+
+        bitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true);
+
+        File imageDirectory = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+        if (!imageDirectory.exists()) {
+            Log.d("image-crop-picker", "Pictures Directory is not existing. Will create this directory.");
+            imageDirectory.mkdirs();
+        }
+
+        File resizeImageFile = new File(imageDirectory, UUID.randomUUID() + ".jpg");
+
+        OutputStream os = new BufferedOutputStream(new FileOutputStream(resizeImageFile));
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, os);
+
+        // Don't set unnecessary exif attribute
+        if (shouldSetOrientation(originalOrientation)) {
+            ExifInterface exif = new ExifInterface(resizeImageFile.getAbsolutePath());
+            exif.setAttribute(ExifInterface.TAG_ORIENTATION, originalOrientation);
+            exif.saveAttributes();
+        }
+
+        os.close();
+        bitmap.recycle();
+
+        return resizeImageFile;
+    }
+
+    File resize(
+            Context context,
+            String originalImagePath,
+            int originalWidth,
+            int originalHeight,
+            int maxWidth,
+            int maxHeight,
+            int quality,
+            int cropWidth,
+            int cropHeight
+            ) throws IOException {
+
+        int targetWidth = cropWidth;
+        int targetHeight = cropHeight;
 
         Bitmap bitmap = null;
         if (originalWidth <= maxWidth && originalHeight <= maxHeight) {

@@ -91,7 +91,7 @@ class Compression {
             int maxHeight,
             int quality,
             int cropWidth,
-            int cropHeight,
+            int cropHeight
             ) throws IOException {
 
         int targetWidth = cropWidth;

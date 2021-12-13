@@ -34,7 +34,7 @@ class Compression {
             int originalHeight,
             int maxWidth,
             int maxHeight,
-            int quality,
+            int quality
     ) throws IOException {
         Pair<Integer, Integer> targetDimensions =
                 this.calculateTargetDimensions(originalWidth, originalHeight, maxWidth, maxHeight);
@@ -91,7 +91,7 @@ class Compression {
             int maxHeight,
             int quality,
             int cropWidth,
-            int cropHeight
+            int cropHeight,
             ) throws IOException {
 
         int targetWidth = cropWidth;
